@@ -2,12 +2,12 @@ use crate::audio;
 use crate::audio::Sink;
 use gtk4::prelude::*;
 use gtk4::{
-    gio,
-    Application, ApplicationWindow, Box as GtkBox, Button, CheckButton, Label, ListBox,
-    Orientation,
+    gio, Application, ApplicationWindow, Builder, Box as GtkBox, Button, CheckButton, Label,
+    ListBox,
 };
 
 const APP_ID: &str = "dev.nick.multisink";
+const UI_SRC: &str = include_str!("../data/multisink.ui");
 
 pub fn run_gui() -> anyhow::Result<()> {
     // If you want to *force* Wayland:
@@ -15,14 +15,14 @@ pub fn run_gui() -> anyhow::Result<()> {
 
     let app = Application::builder()
         .application_id(APP_ID)
-        // Tell GApplication we’ll handle command line ourselves
+        // We handle command line ourselves so GLib doesn't whine about "opening files"
         .flags(gio::ApplicationFlags::HANDLES_COMMAND_LINE)
         .build();
 
-    // When launched with args (like `multisink gui`), just activate and ignore them
+    // Ignore CLI args like "gui" and just activate
     app.connect_command_line(|app, _cmd| {
         app.activate();
-        0.into() // exit status
+        0.into()
     });
 
     app.connect_activate(build_ui);
@@ -36,37 +36,29 @@ pub fn run_gui() -> anyhow::Result<()> {
 }
 
 fn build_ui(app: &Application) {
-    let window = ApplicationWindow::builder()
-        .application(app)
-        .title("Multisink – multi-output audio")
-        .default_width(480)
-        .default_height(360)
-        .build();
+    let builder = Builder::from_string(UI_SRC);
 
-    let vbox = GtkBox::new(Orientation::Vertical, 6);
+    let window: ApplicationWindow = builder
+        .object("main_window")
+        .expect("Failed to get main_window from UI");
+    window.set_application(Some(app));
 
-    let status_label = Label::new(None);
-    status_label.set_xalign(0.0);
+    let status_label: Label = builder
+        .object("status_label")
+        .expect("Failed to get status_label");
+    let list_box: ListBox = builder
+        .object("sink_list")
+        .expect("Failed to get sink_list");
 
-    let list_box = ListBox::new();
-
-    let buttons_box = GtkBox::new(Orientation::Horizontal, 6);
-    let refresh_button = Button::with_label("Refresh");
-    let enable_button = Button::with_label("Enable combined output");
-    let disable_button = Button::with_label("Disable combined output");
-
-    buttons_box.append(&refresh_button);
-    buttons_box.append(&enable_button);
-    buttons_box.append(&disable_button);
-
-    vbox.append(&status_label);
-    vbox.append(&list_box);
-    vbox.append(&buttons_box);
-
-    vbox.set_vexpand(true);
-    list_box.set_vexpand(true);
-
-    window.set_child(Some(&vbox));
+    let refresh_button: Button = builder
+        .object("refresh_button")
+        .expect("Failed to get refresh_button");
+    let enable_button: Button = builder
+        .object("enable_button")
+        .expect("Failed to get enable_button");
+    let disable_button: Button = builder
+        .object("disable_button")
+        .expect("Failed to get disable_button");
 
     // Connect buttons
     let list_box_clone = list_box.clone();
@@ -96,7 +88,6 @@ fn build_ui(app: &Application) {
 }
 
 fn clear_list_box(list_box: &ListBox) {
-    // In GTK4, ListBox children are ListBoxRow widgets.
     while let Some(child) = list_box.first_child() {
         list_box.remove(&child);
     }
@@ -129,10 +120,10 @@ fn refresh_sinks(list_box: &ListBox, status_label: &Label) {
     let combined_present = sinks.iter().any(|s| s.is_combined);
 
     for s in sinks {
-        let row_box = GtkBox::new(Orientation::Horizontal, 6);
+        let row_box = GtkBox::new(gtk4::Orientation::Horizontal, 6);
 
         let check = CheckButton::new();
-        // Store sink name in widget_name to retrieve it later
+        // Store sink name in widget_name to retrieve later
         check.set_widget_name(&s.name);
         check.set_active(!s.is_combined);
 
@@ -147,7 +138,6 @@ fn refresh_sinks(list_box: &ListBox, status_label: &Label) {
         row_box.append(&check);
         row_box.append(&label);
 
-        // ListBox will wrap this in a ListBoxRow
         list_box.append(&row_box);
     }
 
@@ -161,15 +151,12 @@ fn refresh_sinks(list_box: &ListBox, status_label: &Label) {
 fn enable_from_selection(list_box: &ListBox, status_label: &Label) {
     let mut selected_names: Vec<String> = Vec::new();
 
-    // Iterate over ListBoxRow children
     let mut child_opt = list_box.first_child();
     while let Some(child) = child_opt {
-        // Grab next *before* we move `child` into downcast()
         let next = child.next_sibling();
 
         if let Ok(row) = child.downcast::<gtk4::ListBoxRow>() {
             if let Some(row_child) = row.child() {
-                // row_child is our GtkBox
                 if let Ok(row_box) = row_child.downcast::<GtkBox>() {
                     if let Some(first_child) = row_box.first_child() {
                         if let Ok(check) = first_child.downcast::<CheckButton>() {

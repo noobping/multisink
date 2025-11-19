@@ -32,7 +32,7 @@ This section helps you get a development environment up and running.
 ```sh
 sudo dnf install \
     gtk4-devel gcc clang pkgconf-pkg-config \
-    glib2-devel cairo-devel pango-devel \
+    glib2-devel cairo-devel pango-devel libadwaita-devel \
     pactl xkeyboard-config libxkbcommon
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```

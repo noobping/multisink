@@ -1,8 +1,10 @@
 use crate::audio;
 use crate::audio::Sink;
+use adw::subclass::prelude::*;
 use gtk4::prelude::*;
+use adw::{ApplicationWindow, WindowTitle};
 use gtk4::{
-    gio, Application, ApplicationWindow, Builder, Box as GtkBox, Button, CheckButton, Label,
+    gio, Application, Builder, Box as GtkBox, Button, CheckButton, Label,
     ListBox,
 };
 
@@ -15,7 +17,7 @@ pub fn run_gui() -> anyhow::Result<()> {
 
     let app = Application::builder()
         .application_id(APP_ID)
-        // We handle command line ourselves so GLib doesn't whine about "opening files"
+        // We handle command line ourselves so GLib doesn't complain
         .flags(gio::ApplicationFlags::HANDLES_COMMAND_LINE)
         .build();
 
@@ -43,46 +45,69 @@ fn build_ui(app: &Application) {
         .expect("Failed to get main_window from UI");
     window.set_application(Some(app));
 
-    let status_label: Label = builder
-        .object("status_label")
-        .expect("Failed to get status_label");
+    let window_title: WindowTitle = builder
+        .object("window_title")
+        .expect("Failed to get window_title");
     let list_box: ListBox = builder
         .object("sink_list")
         .expect("Failed to get sink_list");
-
     let refresh_button: Button = builder
         .object("refresh_button")
         .expect("Failed to get refresh_button");
-    let enable_button: Button = builder
-        .object("enable_button")
-        .expect("Failed to get enable_button");
-    let disable_button: Button = builder
-        .object("disable_button")
-        .expect("Failed to get disable_button");
+    let toggle_button: Button = builder
+        .object("toggle_button")
+        .expect("Failed to get toggle_button");
 
-    // Connect buttons
-    let list_box_clone = list_box.clone();
-    let status_clone = status_label.clone();
-    refresh_button.connect_clicked(move |_| {
-        refresh_sinks(&list_box_clone, &status_clone);
-    });
+    // Refresh button: manual refresh
+    {
+        let list_box_clone = list_box.clone();
+        let status_clone = window_title.clone();
+        let toggle_clone = toggle_button.clone();
+        refresh_button.connect_clicked(move |_| {
+            refresh_sinks(&list_box_clone, &status_clone, &toggle_clone);
+        });
+    }
 
-    let list_box_clone = list_box.clone();
-    let status_clone = status_label.clone();
-    enable_button.connect_clicked(move |_| {
-        enable_from_selection(&list_box_clone, &status_clone);
-    });
+    // Toggle button: Enable or Disable based on current state
+    {
+        let list_box_clone = list_box.clone();
+        let status_clone = window_title.clone();
+        let toggle_clone = toggle_button.clone();
+        toggle_button.connect_clicked(move |_| {
+            // Decide what to do based on whether combined sink exists
+            let combined_present = audio::combined_sink_exists().unwrap_or(false);
 
-    let status_clone = status_label.clone();
-    disable_button.connect_clicked(move |_| {
-        match audio::disable_combined() {
-            Ok(()) => status_clone.set_label("Disabled combined sink."),
-            Err(e) => status_clone.set_label(&format!("Failed to disable combined sink: {e}")),
-        }
-    });
+            if combined_present {
+                // Disable path
+                match audio::disable_combined() {
+                    Ok(()) => status_clone.set_subtitle("Combined output disabled."),
+                    Err(e) => status_clone.set_subtitle(&format!("Failed to disable combined sink: {e}")),
+                }
+            } else {
+                // Enable path based on current selection
+                enable_from_selection(&list_box_clone, &status_clone);
+            }
+
+            // Always refresh afterwards to reflect new state
+            refresh_sinks(&list_box_clone, &status_clone, &toggle_clone);
+        });
+    }
+
+    // Auto-refresh when window becomes active (focus in)
+    {
+        let list_box_clone = list_box.clone();
+        let status_clone = window_title.clone();
+        let toggle_clone = toggle_button.clone();
+
+        window.connect_is_active_notify(move |win| {
+            if win.is_active() {
+                refresh_sinks(&list_box_clone, &status_clone, &toggle_clone);
+            }
+        });
+    }
 
     // Initial populate
-    refresh_sinks(&list_box, &status_label);
+    refresh_sinks(&list_box, &window_title, &toggle_button);
 
     window.show();
 }
@@ -93,27 +118,36 @@ fn clear_list_box(list_box: &ListBox) {
     }
 }
 
-fn refresh_sinks(list_box: &ListBox, status_label: &Label) {
+fn refresh_sinks(list_box: &ListBox, title: &WindowTitle, toggle_button: &Button) {
     clear_list_box(list_box);
 
-    match audio::check_backend() {
-        Err(e) => {
-            status_label.set_label(&format!("Audio backend not available: {e}"));
-            return;
-        }
-        Ok(()) => {}
+    if let Err(e) = audio::check_backend() {
+        title.set_subtitle(&format!("Audio backend not available: {e}"));
+        toggle_button.set_sensitive(false);
+        toggle_button.set_label("Unavailable");
+        toggle_button.remove_css_class("suggested-action");
+        toggle_button.remove_css_class("destructive-action");
+        return;
     }
 
     let sinks: Vec<Sink> = match audio::list_sinks() {
         Ok(s) => s,
         Err(e) => {
-            status_label.set_label(&format!("Error listing sinks: {e}"));
+            title.set_subtitle(&format!("Error listing sinks: {e}"));
+            toggle_button.set_sensitive(false);
+            toggle_button.set_label("Unavailable");
+            toggle_button.remove_css_class("suggested-action");
+            toggle_button.remove_css_class("destructive-action");
             return;
         }
     };
 
     if sinks.is_empty() {
-        status_label.set_label("No sinks found.");
+        title.set_subtitle("No audio outputs found.");
+        toggle_button.set_sensitive(false);
+        toggle_button.set_label("Enable");
+        toggle_button.remove_css_class("destructive-action");
+        toggle_button.add_css_class("suggested-action");
         return;
     }
 
@@ -125,6 +159,7 @@ fn refresh_sinks(list_box: &ListBox, status_label: &Label) {
         let check = CheckButton::new();
         // Store sink name in widget_name to retrieve later
         check.set_widget_name(&s.name);
+        // Default: select all non-combined sinks
         check.set_active(!s.is_combined);
 
         let label_text = if s.is_combined {
@@ -141,14 +176,23 @@ fn refresh_sinks(list_box: &ListBox, status_label: &Label) {
         list_box.append(&row_box);
     }
 
+    // Update status + toggle button style according to state
     if combined_present {
-        status_label.set_label("Backend OK. Combined sink is present.");
+        title.set_subtitle("Enabled combined output");
+        toggle_button.set_sensitive(true);
+        toggle_button.set_label("Disable");
+        toggle_button.remove_css_class("suggested-action");
+        toggle_button.add_css_class("destructive-action");
     } else {
-        status_label.set_label("Backend OK. No combined sink yet.");
+        title.set_subtitle("Disabled combined output");
+        toggle_button.set_sensitive(true);
+        toggle_button.set_label("Enable");
+        toggle_button.remove_css_class("destructive-action");
+        toggle_button.add_css_class("suggested-action");
     }
 }
 
-fn enable_from_selection(list_box: &ListBox, status_label: &Label) {
+fn enable_from_selection(list_box: &ListBox, title: &WindowTitle) {
     let mut selected_names: Vec<String> = Vec::new();
 
     let mut child_opt = list_box.first_child();
@@ -182,7 +226,7 @@ fn enable_from_selection(list_box: &ListBox, status_label: &Label) {
     };
 
     match res {
-        Ok(()) => status_label.set_label("Enabled combined sink."),
-        Err(e) => status_label.set_label(&format!("Failed to enable combined sink: {e}")),
+        Ok(()) => title.set_subtitle("Combined output enabled."),
+        Err(e) => title.set_subtitle(&format!("Failed to enable combined sink: {e}")),
     }
 }

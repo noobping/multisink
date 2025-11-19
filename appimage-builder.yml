@@ -12,7 +12,7 @@ AppDir:
     id: dev.noobping.multisink
     name: Multisink
     icon: multisink
-    version: "0.1.1"
+    version: "0.1.2"
     exec: usr/bin/multisink
     exec_args: gui
 

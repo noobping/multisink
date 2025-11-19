@@ -1,68 +1,70 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <object class="GtkApplicationWindow" id="main_window">
-    <property name="title">Multi-output audio</property>
-    <property name="default-width">480</property>
-    <property name="default-height">240</property>
+  <requires lib="gtk" version="4.0" />
+  <requires lib="Adw" version="1.0" />
+  <object class="AdwApplicationWindow" id="main_window">
+    <property name="title">Multisink</property>
     <property name="resizable">true</property>
-
-    <child>
-      <object class="GtkBox" id="root_box">
-        <property name="orientation">vertical</property>
-        <property name="spacing">6</property>
-        <property name="margin-start">8</property>
-        <property name="margin-end">8</property>
-        <property name="margin-top">8</property>
-        <property name="margin-bottom">8</property>
-
-        <!-- Status label -->
-        <child>
-          <object class="GtkLabel" id="status_label">
-            <property name="xalign">0</property>
-            <property name="wrap">true</property>
-          </object>
-        </child>
-
-        <!-- List of sinks -->
-        <child>
-          <object class="GtkScrolledWindow">
-            <property name="vexpand">true</property>
-            <property name="hexpand">true</property>
-            <child>
-              <object class="GtkListBox" id="sink_list">
-                <property name="vexpand">true</property>
-                <property name="hexpand">true</property>
-              </object>
-            </child>
-          </object>
-        </child>
-
-        <!-- Buttons -->
-        <child>
-          <object class="GtkBox" id="buttons_box">
-            <property name="orientation">horizontal</property>
-            <property name="spacing">6</property>
-
-            <child>
+    <property name="content">
+      <object class="AdwToolbarView">
+        <child type="top">
+          <object class="AdwHeaderBar">
+            <child type="start">
               <object class="GtkButton" id="refresh_button">
                 <property name="label">Refresh</property>
               </object>
             </child>
 
-            <child>
-              <object class="GtkButton" id="enable_button">
-                <property name="label">Enable combined output</property>
+            <child type="title">
+              <object class="AdwWindowTitle" id="window_title">
+                <property name="title" translatable="yes">Multisink</property>
+                <property name="subtitle" translatable="yes">Combine your audio devices</property>
               </object>
             </child>
 
-            <child>
-              <object class="GtkButton" id="disable_button">
-                <property name="label">Disable combined output</property>
+            <child type="end">
+              <object class="GtkButton" id="toggle_button">
+                <property name="label">Enable</property>
+                <style>
+                  <class name="suggested-action"/>
+                </style>
               </object>
             </child>
           </object>
         </child>
+        <property name="content">
+
+          <object class="GtkBox" id="root_box">
+            <property name="orientation">vertical</property>
+            <property name="spacing">6</property>
+            <property name="margin-start">8</property>
+            <property name="margin-bottom">8</property>
+
+            <!-- Status label -->
+            <child>
+              <object class="GtkLabel" id="status_label">
+                <property name="xalign">0</property>
+                <property name="wrap">true</property>
+              </object>
+            </child>
+
+            <!-- List of sinks -->
+            <child>
+              <object class="GtkScrolledWindow">
+                <property name="vexpand">true</property>
+                <property name="hexpand">true</property>
+                <child>
+                  <object class="GtkListBox" id="sink_list">
+                    <property name="vexpand">true</property>
+                    <property name="hexpand">true</property>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+
+        </property>
       </object>
-    </child>
+    </property>
   </object>
 </interface>

@@ -2,6 +2,7 @@ use crate::audio;
 use crate::audio::Sink;
 use gtk4::prelude::*;
 use gtk4::{
+    gio,
     Application, ApplicationWindow, Box as GtkBox, Button, CheckButton, Label, ListBox,
     Orientation,
 };

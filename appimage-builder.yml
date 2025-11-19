@@ -2,26 +2,30 @@ version: 1
 
 AppDir:
   path: ./Multisink.AppDir
+
   app_info:
     id: dev.noobping.multisink
     name: Multisink
-    version: "1.0.0"
+    icon: multisink
+    version: "0.1.0"
     exec: usr/bin/multisink
     exec_args: gui
-
-  runtime:
-    env:
-      GDK_BACKEND: wayland
 
   apt:
     arch: amd64
     sources:
-      - deb http://deb.debian.org/debian/ bookworm main
+      - sourceline: "deb http://deb.debian.org/debian bookworm main"
     include:
       - libgtk-4-1
-      - libadwaita-1-0
+      - libglib2.0-0
+      - libgobject-2.0-0
       - libpulse0
       - libpipewire-0.3-0
+      - libstdc++6
+    exclude:
+      - cmake
+      - gcc
+      - g++
 
 AppImage:
   arch: x86_64

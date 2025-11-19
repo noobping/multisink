@@ -15,7 +15,15 @@ pub fn run_gui() -> anyhow::Result<()> {
 
     let app = Application::builder()
         .application_id(APP_ID)
+        // Tell GApplication we’ll handle command line ourselves
+        .flags(gio::ApplicationFlags::HANDLES_COMMAND_LINE)
         .build();
+
+    // When launched with args (like `multisink gui`), just activate and ignore them
+    app.connect_command_line(|app, _cmd| {
+        app.activate();
+        0 // exit status
+    });
 
     app.connect_activate(build_ui);
 

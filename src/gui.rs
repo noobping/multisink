@@ -22,7 +22,7 @@ pub fn run_gui() -> anyhow::Result<()> {
     // When launched with args (like `multisink gui`), just activate and ignore them
     app.connect_command_line(|app, _cmd| {
         app.activate();
-        0 // exit status
+        0.into() // exit status
     });
 
     app.connect_activate(build_ui);

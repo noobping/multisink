@@ -5,7 +5,6 @@ use gtk4::{
     Application, ApplicationWindow, Box as GtkBox, Button, CheckButton, Label, ListBox,
     Orientation,
 };
-use glib::Cast;
 
 const APP_ID: &str = "dev.nick.multisink";
 
@@ -156,6 +155,9 @@ fn enable_from_selection(list_box: &ListBox, status_label: &Label) {
     // Iterate over ListBoxRow children
     let mut child_opt = list_box.first_child();
     while let Some(child) = child_opt {
+        // Grab next *before* we move `child` into downcast()
+        let next = child.next_sibling();
+
         if let Ok(row) = child.downcast::<gtk4::ListBoxRow>() {
             if let Some(row_child) = row.child() {
                 // row_child is our GtkBox
@@ -173,7 +175,8 @@ fn enable_from_selection(list_box: &ListBox, status_label: &Label) {
                 }
             }
         }
-        child_opt = child.next_sibling();
+
+        child_opt = next;
     }
 
     let res = if selected_names.is_empty() {

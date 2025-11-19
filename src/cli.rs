@@ -90,23 +90,7 @@ pub fn handle_command(cmd: Command) -> anyhow::Result<()> {
         }
 
         Command::Gui => {
-            let native_options = eframe::NativeOptions {
-                viewport: eframe::egui::ViewportBuilder::default()
-                    .with_inner_size(eframe::egui::vec2(480.0, 360.0))
-                    .with_min_inner_size(eframe::egui::vec2(385.0, 200.0))
-                    .with_resizable(true),
-                ..Default::default()
-            };
-
-            if let Err(e) = eframe::run_native(
-                "Multisink",
-                native_options,
-                Box::new(|_cc| {
-                    Ok::<Box<dyn eframe::App>, Box<dyn std::error::Error + Send + Sync>>(
-                        Box::new(crate::gui::MultisinkApp::new()),
-                    )
-                }),
-            ) {
+            if let Err(e) = crate::gui::run_gui() {
                 eprintln!("GUI error: {e}");
             }
         }

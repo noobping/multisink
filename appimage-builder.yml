@@ -19,7 +19,6 @@ AppDir:
     include:
       - libgtk-4-1
       - libglib2.0-0
-      - libgobject-2.0-0
       - libpulse0
       - libpipewire-0.3-0
       - libstdc++6

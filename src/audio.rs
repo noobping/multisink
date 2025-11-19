@@ -1,5 +1,6 @@
 use std::process::Command;
-
+use std::fs;
+use std::path::PathBuf;
 use thiserror::Error;
 
 pub const COMBINED_SINK_NAME: &str = "multisink_combined";
@@ -30,6 +31,14 @@ pub enum AudioError {
 
     #[error("combined sink not found")]
     CombinedNotFound,
+}
+
+fn module_id_path() -> PathBuf {
+    if let Ok(runtime_dir) = std::env::var("XDG_RUNTIME_DIR") {
+        PathBuf::from(runtime_dir).join("multisink_module_id")
+    } else {
+        std::env::temp_dir().join("multisink_module_id")
+    }
 }
 
 /// Check if we can talk to PulseAudio / PipeWire via pactl.
@@ -134,6 +143,13 @@ pub fn enable_combined(selected: Option<&[String]>) -> Result<(), AudioError> {
         ));
     }
 
+    // pactl load-module prints the numeric module id on stdout
+    let stdout = String::from_utf8(output.stdout)?;
+    let module_id = stdout.trim();
+    if !module_id.is_empty() {
+        let _ = fs::write(module_id_path(), module_id);
+    }
+
     // Set combined sink as default
     let _ = Command::new("pactl")
         .args(["set-default-sink", COMBINED_SINK_NAME])
@@ -187,7 +203,22 @@ fn move_existing_streams_to_combined() -> Result<(), AudioError> {
 pub fn disable_combined() -> Result<(), AudioError> {
     check_backend()?;
 
-    // Find module id for our combined sink
+    // First try unloading by stored module id, if we have one
+    if let Ok(id_str) = fs::read_to_string(module_id_path()) {
+        let id = id_str.trim();
+        if !id.is_empty() {
+            let unload = Command::new("pactl")
+                .args(["unload-module", id])
+                .output()?;
+
+            if unload.status.success() {
+                let _ = fs::remove_file(module_id_path());
+                return Ok(());
+            }
+        }
+    }
+
+    // Fallback: find the module by scanning pactl list modules
     let output = Command::new("pactl")
         .args(["list", "modules"])
         .output()?;
@@ -255,6 +286,7 @@ pub fn disable_combined() -> Result<(), AudioError> {
         ));
     }
 
+    let _ = fs::remove_file(module_id_path());
+
     Ok(())
 }
-

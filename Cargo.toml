@@ -1,5 +1,6 @@
 [package]
 name = "multisink"
+description = "A simple Wayland/X11-compatible tool that mirrors audio to multiple outputs at once, using PipeWire or PulseAudio. Includes both a CLI and GTK4 GUI."
 version = "0.1.0"
 edition = "2021"
 

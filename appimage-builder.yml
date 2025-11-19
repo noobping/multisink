@@ -1,5 +1,10 @@
 version: 1
 
+script:
+  - mkdir -p Multisink.AppDir/usr/bin Multisink.AppDir/usr/share/icons/hicolor/1024x1024/apps
+  - cp data/multisink.png Multisink.AppDir/usr/share/icons/hicolor/1024x1024/apps/multisink.png
+  - cp target/release/multisink Multisink.AppDir/usr/bin/
+
 AppDir:
   path: ./Multisink.AppDir
 

@@ -36,6 +36,8 @@ AppDir:
       - libfreetype6
       - libpulse0
       - libpipewire-0.3-0
+      - librsvg2-2
+      - librsvg2-common
       - libstdc++6
     exclude:
       - libssl3

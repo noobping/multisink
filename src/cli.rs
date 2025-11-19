@@ -27,6 +27,9 @@ pub enum Command {
 
     /// List sinks and whether the combined sink exists
     List,
+
+    /// Launch the GUI
+    Gui,
 }
 
 pub fn handle_command(cmd: Command) -> anyhow::Result<()> {
@@ -85,8 +88,23 @@ pub fn handle_command(cmd: Command) -> anyhow::Result<()> {
                 Err(e) => return Err(e.into()),
             }
         }
+
+        Command::Gui => {
+            let native_options = eframe::NativeOptions::default();
+            if let Err(e) = eframe::run_native(
+                "Multisink",
+                native_options,
+                Box::new(|_cc| {
+                    Ok::<
+                        Box<dyn eframe::App>,
+                        Box<dyn std::error::Error + Send + Sync>,
+                    >(Box::new(crate::gui::MultisinkApp::new()))
+                }),
+            ) {
+                eprintln!("GUI error: {e}");
+            }
+        }
     }
 
     Ok(())
 }
-

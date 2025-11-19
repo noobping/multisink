@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Multisink
+GenericName=Multi-output audio helper
+Comment=Play audio on multiple outputs at once
+Exec=multisink gui
+Icon=multisink
+Terminal=false
+Categories=AudioVideo;Audio;Utility;
+

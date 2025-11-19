@@ -6,6 +6,8 @@ It lets you send audio to **multiple outputs at the same time** — HDMI, speake
 
 It works on Wayland and X11, supports **PipeWire and PulseAudio**, and comes with both a clean GTK4 GUI and a simple CLI.
 
+![screenshot](data/screenshot.png)
+
 ## Usage
 
 1. Download the AppImage from the [releases](https://github.com/noobping/multisink/releases/latest) page.

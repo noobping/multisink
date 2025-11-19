@@ -6,7 +6,7 @@ use gtk4::{
     ListBox,
 };
 
-const APP_ID: &str = "dev.nick.multisink";
+const APP_ID: &str = "dev.noobping.multisink";
 const UI_SRC: &str = include_str!("../data/multisink.ui");
 
 pub fn run_gui() -> anyhow::Result<()> {

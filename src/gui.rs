@@ -171,7 +171,7 @@ fn refresh_sinks(list_box: &ListBox, title: &WindowTitle, toggle_button: &Button
         let label_text = if s.is_combined {
             format!("{} (#{} ) [combined]", s.name, s.index)
         } else {
-            format!("{} (#{} )", s.name, s.index)
+            s.pretty_name
         };
         let label = Label::new(Some(&label_text));
         label.set_xalign(0.0);

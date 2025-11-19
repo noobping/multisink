@@ -9,7 +9,15 @@ pub const COMBINED_SINK_NAME: &str = "multisink_combined";
 pub struct Sink {
     pub index: u32,
     pub name: String,
+    pub pretty_name: String,
     pub is_combined: bool,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct PactlSink {
+    index: u32,
+    name: String,
+    description: Option<String>,
 }
 
 #[derive(Debug, Error)]
@@ -66,7 +74,7 @@ pub fn list_sinks() -> Result<Vec<Sink>, AudioError> {
     check_backend()?;
 
     let output = Command::new("pactl")
-        .args(["list", "sinks", "short"])
+        .args(["--format=json", "list", "sinks"])
         .output()?;
 
     if !output.status.success() {
@@ -75,29 +83,23 @@ pub fn list_sinks() -> Result<Vec<Sink>, AudioError> {
         ));
     }
 
-    let stdout = String::from_utf8(output.stdout)?;
-    let mut sinks = Vec::new();
+    let sinks_raw: Vec<PactlSink> = serde_json::from_slice(&output.stdout)
+        .map_err(|e| AudioError::CommandFailed(e.to_string()))?;
 
-    for line in stdout.lines() {
-        let line = line.trim();
-        if line.is_empty() {
-            continue;
-        }
-
-        // Format: index \t name \t driver \t sample_spec ...
-        let mut parts = line.split_whitespace();
-        let idx_str = parts.next().unwrap_or("");
-        let name = parts.next().unwrap_or("").to_string();
-
-        let index: u32 = idx_str.parse().unwrap_or(0);
-        let is_combined = name == COMBINED_SINK_NAME;
-
-        sinks.push(Sink {
-            index,
-            name,
-            is_combined,
-        });
-    }
+    let sinks = sinks_raw
+        .into_iter()
+        .map(|s| {
+            let is_combined = s.name == COMBINED_SINK_NAME;
+            Sink {
+                index: s.index,
+                name: s.name.clone(),
+                pretty_name: s
+                    .description
+                    .unwrap_or_else(|| s.name.clone()),
+                is_combined,
+            }
+        })
+        .collect();
 
     Ok(sinks)
 }

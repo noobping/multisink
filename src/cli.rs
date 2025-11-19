@@ -41,7 +41,7 @@ pub fn handle_command(cmd: Command) -> anyhow::Result<()> {
 
             for s in sinks {
                 let marker = if s.is_combined { "[combined]" } else { "          " };
-                println!("{marker} #{}  {}", s.index, s.name);
+                println!("{marker} #{}  {}", s.index, s.pretty_name);
             }
 
             let combined = audio::combined_sink_exists()?;

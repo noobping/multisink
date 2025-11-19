@@ -1,6 +1,5 @@
 use crate::audio;
 use crate::audio::Sink;
-use adw::subclass::prelude::*;
 use gtk4::prelude::*;
 use adw::{ApplicationWindow, WindowTitle};
 use gtk4::{
@@ -12,6 +11,10 @@ const APP_ID: &str = "dev.noobping.multisink";
 const UI_SRC: &str = include_str!("../data/multisink.ui");
 
 pub fn run_gui() -> anyhow::Result<()> {
+    // Register compiled GResources (from build.rs)
+    gio::resources_register_include!("resources.gresource")
+        .expect("Failed to register resources");
+
     // If you want to *force* Wayland:
     // std::env::set_var("GDK_BACKEND", "wayland");
 
@@ -124,7 +127,8 @@ fn refresh_sinks(list_box: &ListBox, title: &WindowTitle, toggle_button: &Button
     if let Err(e) = audio::check_backend() {
         title.set_subtitle(&format!("Audio backend not available: {e}"));
         toggle_button.set_sensitive(false);
-        toggle_button.set_label("Unavailable");
+        toggle_button.set_tooltip_text(Some("Unavailable"));
+        toggle_button.set_icon_name("circle-crossed-symbolic");
         toggle_button.remove_css_class("suggested-action");
         toggle_button.remove_css_class("destructive-action");
         return;
@@ -135,7 +139,8 @@ fn refresh_sinks(list_box: &ListBox, title: &WindowTitle, toggle_button: &Button
         Err(e) => {
             title.set_subtitle(&format!("Error listing sinks: {e}"));
             toggle_button.set_sensitive(false);
-            toggle_button.set_label("Unavailable");
+            toggle_button.set_tooltip_text(Some("Unavailable"));
+            toggle_button.set_icon_name("circle-crossed-symbolic");
             toggle_button.remove_css_class("suggested-action");
             toggle_button.remove_css_class("destructive-action");
             return;
@@ -145,7 +150,8 @@ fn refresh_sinks(list_box: &ListBox, title: &WindowTitle, toggle_button: &Button
     if sinks.is_empty() {
         title.set_subtitle("No audio outputs found.");
         toggle_button.set_sensitive(false);
-        toggle_button.set_label("Enable");
+        toggle_button.set_tooltip_text(Some("Enable"));
+        toggle_button.set_icon_name("checkmark-small-symbolic");
         toggle_button.remove_css_class("destructive-action");
         toggle_button.add_css_class("suggested-action");
         return;
@@ -180,13 +186,15 @@ fn refresh_sinks(list_box: &ListBox, title: &WindowTitle, toggle_button: &Button
     if combined_present {
         title.set_subtitle("Enabled combined output");
         toggle_button.set_sensitive(true);
-        toggle_button.set_label("Disable");
+        toggle_button.set_tooltip_text(Some("Disable"));
+        toggle_button.set_icon_name("cross-small-symbolic");
         toggle_button.remove_css_class("suggested-action");
         toggle_button.add_css_class("destructive-action");
     } else {
         title.set_subtitle("Disabled combined output");
         toggle_button.set_sensitive(true);
-        toggle_button.set_label("Enable");
+        toggle_button.set_tooltip_text(Some("Enable"));
+        toggle_button.set_icon_name("checkmark-small-symbolic");
         toggle_button.remove_css_class("destructive-action");
         toggle_button.add_css_class("suggested-action");
     }

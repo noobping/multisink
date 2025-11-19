@@ -4,6 +4,7 @@
   <requires lib="Adw" version="1.0" />
   <object class="AdwApplicationWindow" id="main_window">
     <property name="title">Multisink</property>
+    <property name="default-width">450</property>
     <property name="resizable">true</property>
     <property name="content">
       <object class="AdwToolbarView">
@@ -11,7 +12,8 @@
           <object class="AdwHeaderBar">
             <child type="start">
               <object class="GtkButton" id="refresh_button">
-                <property name="label">Refresh</property>
+                <property name="icon-name">update-symbolic</property>
+                <property name="tooltip-text" translatable="yes">Refresh</property>
               </object>
             </child>
 
@@ -24,7 +26,8 @@
 
             <child type="end">
               <object class="GtkButton" id="toggle_button">
-                <property name="label">Enable</property>
+                <property name="icon-name">checkmark-small-symbolic</property>
+                <property name="tooltip-text" translatable="yes">Enable</property>
                 <style>
                   <class name="suggested-action"/>
                 </style>

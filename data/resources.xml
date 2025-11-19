@@ -1,0 +1,7 @@
+<gresources>
+  <gresource prefix="/dev/noobping/multisink">
+    <file>icons/checkmark-small-symbolic.svg</file>
+    <file>icons/cross-small-symbolic.svg</file>
+    <file>icons/update-symbolic.svg</file>
+  </gresource>
+</gresources>

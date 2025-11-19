@@ -41,6 +41,16 @@ fn module_id_path() -> PathBuf {
     }
 }
 
+fn set_volume_max_for_sinks(names: &[String]) -> Result<(), AudioError> {
+    for name in names {
+        // We don't treat failures as fatal; just try best-effort
+        let _ = Command::new("pactl")
+            .args(["set-sink-volume", name, "100%"])
+            .status();
+    }
+    Ok(())
+}
+
 /// Check if we can talk to PulseAudio / PipeWire via pactl.
 pub fn check_backend() -> Result<(), AudioError> {
     let output = Command::new("pactl").arg("info").output();
@@ -108,7 +118,7 @@ pub fn enable_combined(selected: Option<&[String]>) -> Result<(), AudioError> {
 
     let sinks = list_sinks()?;
 
-    // Decide which sink names to combine
+    // Decide which sink names to combine (only non-combined, as before)
     let sink_names: Vec<String> = if let Some(sel) = selected {
         sinks
             .into_iter()
@@ -126,6 +136,9 @@ pub fn enable_combined(selected: Option<&[String]>) -> Result<(), AudioError> {
     if sink_names.len() < 2 {
         return Err(AudioError::NotEnoughSinks);
     }
+
+    // Set all selected sinks to 100%
+    let _ = set_volume_max_for_sinks(&sink_names);
 
     let slaves = sink_names.join(",");
 
@@ -149,6 +162,11 @@ pub fn enable_combined(selected: Option<&[String]>) -> Result<(), AudioError> {
     if !module_id.is_empty() {
         let _ = fs::write(module_id_path(), module_id);
     }
+
+    // Set the combined sink itself to 100%
+    let _ = Command::new("pactl")
+        .args(["set-sink-volume", COMBINED_SINK_NAME, "100%"])
+        .status();
 
     // Set combined sink as default
     let _ = Command::new("pactl")

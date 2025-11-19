@@ -1,7 +1,0 @@
-#!/bin/sh
-# Resolve the directory of this script (the AppDir)
-HERE="$(dirname "$(readlink -f "$0")")"
-
-# Forward all arguments to the actual binary
-exec "$HERE/usr/bin/multisink" "$@"
-

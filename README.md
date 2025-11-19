@@ -8,7 +8,7 @@ It works on Wayland and X11, supports **PipeWire and PulseAudio**, and comes wit
 
 ## Usage
 
-1. [Download](https://github.com/noobping/multisink/releases/download/v0.1.0/Multisink-0.1.0-x86_64.AppImage) the AppImage from the releases page.
+1. Download the AppImage from the [releases](https://github.com/noobping/multisink/releases/latest) page.
 2. Make it executable:
 
 ```sh

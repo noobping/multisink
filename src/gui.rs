@@ -5,11 +5,12 @@ use gtk4::{
     Application, ApplicationWindow, Box as GtkBox, Button, CheckButton, Label, ListBox,
     Orientation,
 };
+use glib::Cast;
 
 const APP_ID: &str = "dev.nick.multisink";
 
 pub fn run_gui() -> anyhow::Result<()> {
-    // If you want to *force* Wayland at runtime, you can uncomment this:
+    // If you want to *force* Wayland:
     // std::env::set_var("GDK_BACKEND", "wayland");
 
     let app = Application::builder()
@@ -18,7 +19,6 @@ pub fn run_gui() -> anyhow::Result<()> {
 
     app.connect_activate(build_ui);
 
-    // Handy debug line: see which backend GTK chose (wayland / x11 / broadway / etc.)
     if let Ok(backend) = std::env::var("GDK_BACKEND") {
         eprintln!("GDK_BACKEND = {backend}");
     }
@@ -55,13 +55,12 @@ fn build_ui(app: &Application) {
     vbox.append(&list_box);
     vbox.append(&buttons_box);
 
-    // Make the list grow and others shrink less
     vbox.set_vexpand(true);
     list_box.set_vexpand(true);
 
     window.set_child(Some(&vbox));
 
-    // Clone for closures
+    // Connect buttons
     let list_box_clone = list_box.clone();
     let status_clone = status_label.clone();
     refresh_button.connect_clicked(move |_| {
@@ -82,17 +81,21 @@ fn build_ui(app: &Application) {
         }
     });
 
-    // Initial fill
+    // Initial populate
     refresh_sinks(&list_box, &status_label);
 
     window.show();
 }
 
-fn refresh_sinks(list_box: &ListBox, status_label: &Label) {
-    // Clear previous rows
-    for child in list_box.children() {
+fn clear_list_box(list_box: &ListBox) {
+    // In GTK4, ListBox children are ListBoxRow widgets.
+    while let Some(child) = list_box.first_child() {
         list_box.remove(&child);
     }
+}
+
+fn refresh_sinks(list_box: &ListBox, status_label: &Label) {
+    clear_list_box(list_box);
 
     match audio::check_backend() {
         Err(e) => {
@@ -121,9 +124,8 @@ fn refresh_sinks(list_box: &ListBox, status_label: &Label) {
         let row_box = GtkBox::new(Orientation::Horizontal, 6);
 
         let check = CheckButton::new();
-        // Use widget_name to stash the sink name
+        // Store sink name in widget_name to retrieve it later
         check.set_widget_name(&s.name);
-        // Default: select all non-combined sinks
         check.set_active(!s.is_combined);
 
         let label_text = if s.is_combined {
@@ -137,6 +139,7 @@ fn refresh_sinks(list_box: &ListBox, status_label: &Label) {
         row_box.append(&check);
         row_box.append(&label);
 
+        // ListBox will wrap this in a ListBoxRow
         list_box.append(&row_box);
     }
 
@@ -150,20 +153,27 @@ fn refresh_sinks(list_box: &ListBox, status_label: &Label) {
 fn enable_from_selection(list_box: &ListBox, status_label: &Label) {
     let mut selected_names: Vec<String> = Vec::new();
 
-    for row in list_box.children() {
-        if let Some(row_box) = row.downcast_ref::<GtkBox>() {
-            // First child should be the CheckButton
-            if let Some(first_child) = row_box.first_child() {
-                if let Ok(check) = first_child.downcast::<CheckButton>() {
-                    if check.is_active() {
-                        let name = check.widget_name();
-                        if !name.is_empty() {
-                            selected_names.push(name.to_string());
+    // Iterate over ListBoxRow children
+    let mut child_opt = list_box.first_child();
+    while let Some(child) = child_opt {
+        if let Ok(row) = child.downcast::<gtk4::ListBoxRow>() {
+            if let Some(row_child) = row.child() {
+                // row_child is our GtkBox
+                if let Ok(row_box) = row_child.downcast::<GtkBox>() {
+                    if let Some(first_child) = row_box.first_child() {
+                        if let Ok(check) = first_child.downcast::<CheckButton>() {
+                            if check.is_active() {
+                                let name = check.widget_name();
+                                if !name.is_empty() {
+                                    selected_names.push(name.to_string());
+                                }
+                            }
                         }
                     }
                 }
             }
         }
+        child_opt = child.next_sibling();
     }
 
     let res = if selected_names.is_empty() {

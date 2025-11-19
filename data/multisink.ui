@@ -4,7 +4,8 @@
   <requires lib="Adw" version="1.0" />
   <object class="AdwApplicationWindow" id="main_window">
     <property name="title">Multisink</property>
-    <property name="default-width">650</property>
+    <property name="default-width">380</property>
+    <property name="default-height">280</property>
     <property name="resizable">true</property>
     <property name="content">
       <object class="AdwToolbarView">
@@ -36,24 +37,18 @@
           </object>
         </child>
         <property name="content">
-          <object class="AdwPreferencesPage">
+          <object class="GtkScrolledWindow">
             <child>
-              <object class="AdwPreferencesGroup">
-                <property name="title" translatable="yes">Output Devices</property>
-
-                <!-- Your sink list goes here -->
-                <child>
-                  <object class="GtkListBox" id="sink_list">
-                    <property name="selection-mode">none</property>
-                    <style>
-                      <class name="boxed-list" />
-                    </style>
-                  </object>
-                </child>
+              <object class="GtkListBox" id="sink_list">
+                <property name="hexpand">true</property>
+                <property name="vexpand">true</property>
+                <property name="selection-mode">none</property>
+                <style>
+                  <class name="boxed-list" />
+                </style>
               </object>
             </child>
           </object>
-
         </property>
       </object>
     </property>

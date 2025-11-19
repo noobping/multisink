@@ -175,6 +175,8 @@ fn refresh_sinks(list_box: &ListBox, title: &WindowTitle, toggle_button: &Button
         };
         let label = Label::new(Some(&label_text));
         label.set_xalign(0.0);
+        label.set_wrap(true);
+        label.set_wrap_mode(gtk4::pango::WrapMode::WordChar);
 
         row_box.append(&check);
         row_box.append(&label);

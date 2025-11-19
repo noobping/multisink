@@ -1,3 +1,4 @@
 target/
 *.lock
 Multisink.AppDir/usr/bin/multisink
+Multisink.AppDir/usr/lib/

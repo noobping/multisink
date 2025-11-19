@@ -1,6 +1,4 @@
 target/
 *.lock
-Multisink.AppDir/usr/bin/multisink
-Multisink.AppDir/usr/lib/
-appimage-builder-cache/
-Multisink.AppDir/lib/
+Multisink.AppDir/
+*cache/

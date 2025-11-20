@@ -30,12 +30,27 @@
 
             <child type="start">
               <object class="GtkButton" id="toggle_button">
-                <property name="icon-name">checkmark-small-symbolic</property>
-                <property name="label" translatable="yes">Apply</property>
-                <property name="tooltip-text" translatable="yes">Combine audio devices</property>
                 <style>
                   <class name="suggested-action"/>
                 </style>
+
+                <child>
+                  <object class="GtkBox">
+                    <property name="spacing">6</property>
+
+                    <child>
+                      <object class="GtkImage" id="toggle_icon">
+                        <property name="icon-name">checkmark-small-symbolic</property>
+                      </object>
+                    </child>
+
+                    <child>
+                      <object class="GtkLabel" id="toggle_label">
+                        <property name="label" translatable="yes">Apply</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
               </object>
             </child>
           </object>

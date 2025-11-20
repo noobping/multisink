@@ -4,7 +4,7 @@ use gtk4::prelude::*;
 use adw::{ApplicationWindow, WindowTitle};
 use gtk4::{
     gio, Application, Builder, Box as GtkBox, Button, CheckButton, Label,
-    ListBox,
+    ListBox, Image,
 };
 
 const APP_ID: &str = "dev.noobping.multisink";
@@ -60,14 +60,22 @@ fn build_ui(app: &Application) {
     let toggle_button: Button = builder
         .object("toggle_button")
         .expect("Failed to get toggle_button");
+    let toggle_label: Label = builder
+        .object("toggle_label")
+        .expect("Failed to get toggle_label");
+    let toggle_icon: Image = builder
+        .object("toggle_icon")
+        .expect("Failed to get toggle_icon");
 
     // Refresh button: manual refresh
     {
         let list_box_clone = list_box.clone();
         let status_clone = window_title.clone();
         let toggle_clone = toggle_button.clone();
+        let label_clone = toggle_label.clone();
+        let icon_clone = toggle_icon.clone();
         refresh_button.connect_clicked(move |_| {
-            refresh_sinks(&list_box_clone, &status_clone, &toggle_clone);
+            refresh_sinks(&list_box_clone, &status_clone, &toggle_clone, &label_clone, &icon_clone);
         });
     }
 
@@ -76,6 +84,8 @@ fn build_ui(app: &Application) {
         let list_box_clone = list_box.clone();
         let status_clone = window_title.clone();
         let toggle_clone = toggle_button.clone();
+        let label_clone = toggle_label.clone();
+        let icon_clone = toggle_icon.clone();
         toggle_button.connect_clicked(move |_| {
             // Decide what to do based on whether combined sink exists
             let combined_present = audio::combined_sink_exists().unwrap_or(false);
@@ -92,7 +102,7 @@ fn build_ui(app: &Application) {
             }
 
             // Always refresh afterwards to reflect new state
-            refresh_sinks(&list_box_clone, &status_clone, &toggle_clone);
+            refresh_sinks(&list_box_clone, &status_clone, &toggle_clone, &label_clone, &icon_clone);
         });
     }
 
@@ -101,16 +111,18 @@ fn build_ui(app: &Application) {
         let list_box_clone = list_box.clone();
         let status_clone = window_title.clone();
         let toggle_clone = toggle_button.clone();
+        let label_clone = toggle_label.clone();
+        let icon_clone = toggle_icon.clone();
 
         window.connect_is_active_notify(move |win| {
             if win.is_active() {
-                refresh_sinks(&list_box_clone, &status_clone, &toggle_clone);
+                refresh_sinks(&list_box_clone, &status_clone, &toggle_clone, &label_clone, &icon_clone);
             }
         });
     }
 
     // Initial populate
-    refresh_sinks(&list_box, &window_title, &toggle_button);
+    refresh_sinks(&list_box, &window_title, &toggle_button, &toggle_label, &toggle_icon);
 
     window.show();
 }
@@ -121,14 +133,14 @@ fn clear_list_box(list_box: &ListBox) {
     }
 }
 
-fn refresh_sinks(list_box: &ListBox, title: &WindowTitle, toggle_button: &Button) {
+fn refresh_sinks(list_box: &ListBox, title: &WindowTitle, toggle_button: &Button, toggle_label: &Label, toggle_icon: &Image) {
     clear_list_box(list_box);
 
     if let Err(e) = audio::check_backend() {
         title.set_subtitle(&format!("Audio backend not available: {e}"));
         toggle_button.set_sensitive(false);
-        toggle_button.set_tooltip_text(Some("Unavailable"));
-        toggle_button.set_icon_name("circle-crossed-symbolic");
+        toggle_label.set_text("Unavailable");
+        toggle_icon.set_icon_name(Some("circle-crossed-symbolic"));
         toggle_button.remove_css_class("suggested-action");
         toggle_button.remove_css_class("destructive-action");
         return;
@@ -139,8 +151,8 @@ fn refresh_sinks(list_box: &ListBox, title: &WindowTitle, toggle_button: &Button
         Err(e) => {
             title.set_subtitle(&format!("Error listing sinks: {e}"));
             toggle_button.set_sensitive(false);
-            toggle_button.set_tooltip_text(Some("Unavailable"));
-            toggle_button.set_icon_name("circle-crossed-symbolic");
+            toggle_label.set_text("Unavailable");
+            toggle_icon.set_icon_name(Some("circle-crossed-symbolic"));
             toggle_button.remove_css_class("suggested-action");
             toggle_button.remove_css_class("destructive-action");
             return;
@@ -150,8 +162,8 @@ fn refresh_sinks(list_box: &ListBox, title: &WindowTitle, toggle_button: &Button
     if sinks.is_empty() {
         title.set_subtitle("No audio outputs found.");
         toggle_button.set_sensitive(false);
-        toggle_button.set_tooltip_text(Some("Combine audio devices"));
-        toggle_button.set_icon_name("checkmark-small-symbolic");
+        toggle_label.set_text("Apply");
+        toggle_icon.set_icon_name(Some("checkmark-small-symbolic"));
         toggle_button.remove_css_class("destructive-action");
         return;
     }
@@ -187,14 +199,14 @@ fn refresh_sinks(list_box: &ListBox, title: &WindowTitle, toggle_button: &Button
     if combined_present {
         title.set_subtitle("Enabled combined output");
         toggle_button.set_sensitive(true);
-        toggle_button.set_tooltip_text(Some("Disable"));
-        toggle_button.set_icon_name("cross-small-symbolic");
+        toggle_label.set_text("Revert");
+        toggle_icon.set_icon_name(Some("cross-small-symbolic"));
         toggle_button.add_css_class("destructive-action");
     } else {
         title.set_subtitle("Disabled combined output");
         toggle_button.set_sensitive(true);
-        toggle_button.set_tooltip_text(Some("Combine audio devices"));
-        toggle_button.set_icon_name("checkmark-small-symbolic");
+        toggle_label.set_text("Apply");
+        toggle_icon.set_icon_name(Some("checkmark-small-symbolic"));
         toggle_button.remove_css_class("destructive-action");
     }
 }

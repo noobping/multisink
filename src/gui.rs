@@ -150,10 +150,9 @@ fn refresh_sinks(list_box: &ListBox, title: &WindowTitle, toggle_button: &Button
     if sinks.is_empty() {
         title.set_subtitle("No audio outputs found.");
         toggle_button.set_sensitive(false);
-        toggle_button.set_tooltip_text(Some("Enable"));
+        toggle_button.set_tooltip_text(Some("Combine audio devices"));
         toggle_button.set_icon_name("checkmark-small-symbolic");
         toggle_button.remove_css_class("destructive-action");
-        toggle_button.add_css_class("suggested-action");
         return;
     }
 
@@ -190,15 +189,13 @@ fn refresh_sinks(list_box: &ListBox, title: &WindowTitle, toggle_button: &Button
         toggle_button.set_sensitive(true);
         toggle_button.set_tooltip_text(Some("Disable"));
         toggle_button.set_icon_name("cross-small-symbolic");
-        toggle_button.remove_css_class("suggested-action");
         toggle_button.add_css_class("destructive-action");
     } else {
         title.set_subtitle("Disabled combined output");
         toggle_button.set_sensitive(true);
-        toggle_button.set_tooltip_text(Some("Enable"));
+        toggle_button.set_tooltip_text(Some("Combine audio devices"));
         toggle_button.set_icon_name("checkmark-small-symbolic");
         toggle_button.remove_css_class("destructive-action");
-        toggle_button.add_css_class("suggested-action");
     }
 }
 

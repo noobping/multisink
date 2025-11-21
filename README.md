@@ -41,13 +41,13 @@ Configuration for VS Code:
 
 ```json
 {
-    "rust-analyzer.server.path": "/var/home/nick/.cargo/bin/rust-analyzer",
-    "rust-analyzer.runnables.command": "/var/home/nick/.cargo/bin/cargo",
+    "rust-analyzer.server.path": "/var/home/$USER/.cargo/bin/rust-analyzer",
+    "rust-analyzer.runnables.command": "/var/home/$USER/.cargo/bin/cargo",
     "rust-analyzer.files.exclude": [
         ".flatpak"
     ],
     "rust-analyzer.server.extraEnv": {
-        "PATH": "/var/home/nick/.cargo/bin:/app/bin:/usr/bin"
+        "PATH": "/var/home/$USER/.cargo/bin:/app/bin:/usr/bin"
     }
 }
 ```

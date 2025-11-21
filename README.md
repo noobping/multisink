@@ -35,6 +35,23 @@ Output devices are combined.
 
 This section helps you get a development environment up and running.
 
+### VS Code
+
+Configuration for VS Code:
+
+```json
+{
+    "rust-analyzer.server.path": "/var/home/nick/.cargo/bin/rust-analyzer",
+    "rust-analyzer.runnables.command": "/var/home/nick/.cargo/bin/cargo",
+    "rust-analyzer.files.exclude": [
+        ".flatpak"
+    ],
+    "rust-analyzer.server.extraEnv": {
+        "PATH": "/var/home/nick/.cargo/bin:/app/bin:/usr/bin"
+    }
+}
+```
+
 ### Application
 
 1. Install dependencies (inside your toolbox)
